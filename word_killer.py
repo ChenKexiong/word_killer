@@ -70,8 +70,14 @@ def read_dict(args):
                 temp = pattern.match(line).groups(0)
                 if not temp[0] in st_list.keys():
                     st_list[temp[0]]=word((temp[0], 0, 0, 0))
-                st_list[temp[0]].request = 1 if 'R' in flags else test_request
-                word_list.add(temp[0])
+                if 'R' in flags:
+                    if st_list[temp[0]].failed_count == 0 and st_list[temp[0]].tested_count >= 3:
+                    else:
+                        st_list[temp[0]].request = 1
+                        word_list.add(temp[0])
+                elif test_request > 0:
+                    st_list[temp[0]].request = test_request
+                    word_list.add(temp[0])
             fin.close()
     except AttributeError as e:
         if line != '\n':
@@ -161,8 +167,8 @@ def next_word():
 
 if __name__=='__main__':
     args=parse_args()
-    read_dict(args)
     read_statistics(".statistics")
+    read_dict(args)
 
     while True:
         res=next_word()
