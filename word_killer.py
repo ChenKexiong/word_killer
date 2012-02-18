@@ -72,6 +72,7 @@ def read_dict(args):
                     st_list[temp[0]]=word((temp[0], 0, 0, 0))
                 if 'R' in flags:
                     if st_list[temp[0]].failed_count == 0 and st_list[temp[0]].tested_count >= 3:
+                        pass
                     else:
                         st_list[temp[0]].request = 1
                         word_list.add(temp[0])
