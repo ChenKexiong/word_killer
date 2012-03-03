@@ -4,6 +4,7 @@ import getopt
 import re
 import os
 import random
+import time
 
 VOICE_CMD='mplayer /usr/local/share/voice-mwc/{0}.wav >/dev/null 2>/dev/null &'
 RE_WORD=r'[a-zA-Z](?:[a-zA-Z-]*[a-zA-Z])?'
@@ -15,12 +16,13 @@ flags=set()
 now=[]
 
 class word:
-    def __init__(self, args):
+    def __init__(self, args, note):
         self.word=args[0]
         self.freq=int(args[1])
         self.failed_count=int(args[2])
         self.tested_count=int(args[3])
         self.request = 0
+        self.note = note
 
     def merge(self, args):
         self.freq+=int(args[1])
@@ -62,27 +64,28 @@ def parse_args():
 def read_dict(args):
     global st_list
 
-    pattern = re.compile(r'^\s*'+'('+RE_WORD+')'+r'.*$')
+    pattern = re.compile(r'^\s*('+RE_WORD+r')\s*(.*)\s*$')
     try:
         for filename in args:
-            fin = open(filename)
+            fin = open(filename, 'r')
             for line in fin:
-                temp = pattern.match(line).groups(0)
-                if not temp[0] in st_list.keys():
-                    st_list[temp[0]]=word((temp[0], 0, 0, 0))
-                if 'R' in flags:
-                    if st_list[temp[0]].failed_count == 0 and st_list[temp[0]].tested_count >= 3:
-                        pass
-                    else:
-                        st_list[temp[0]].request = 1
+                try:
+                    temp = pattern.match(line).groups(0)
+                    if not temp[0] in st_list.keys():
+                        st_list[temp[0]]=word((temp[0], 0, 0, 0), temp[1])
+                    st_list[temp[0]].note = temp[1]
+                    if 'R' in flags:
+                        if st_list[temp[0]].failed_count == 0 and st_list[temp[0]].tested_count >= 3:
+                            pass
+                        else:
+                            st_list[temp[0]].request = 1
+                            word_list.add(temp[0])
+                    elif test_request > 0:
+                        st_list[temp[0]].request = test_request
                         word_list.add(temp[0])
-                elif test_request > 0:
-                    st_list[temp[0]].request = test_request
-                    word_list.add(temp[0])
+                except AttributeError as e:
+                    print('Invalid line: '+line)
             fin.close()
-    except AttributeError as e:
-        if line != '\n':
-            print('Invalid line: '+line)
     except:
         print('Dict read error')
         fin.close()
@@ -94,7 +97,7 @@ def read_statistics(filename):
 
     pattern=re.compile(r'^\s*'+'('+RE_WORD+')'+3*(r'(?:\s+(\d+))?')+r'\s*$')
     try:
-        fin=open(filename)
+        fin=open(filename, 'r')
         for line in fin:
             temp=pattern.match(line)
             if temp:
@@ -102,7 +105,7 @@ def read_statistics(filename):
                 if temp[0] in st_list.keys():
                     st_list[temp[0]].merge(temp)
                 else:
-                    st_list[temp[0]]=word(temp)
+                    st_list[temp[0]]=word(temp, '')
             elif line != '\n':
                 print('Invalid line: '+line)
         fin.close()
@@ -148,8 +151,6 @@ def judge(res, buff):
                 word_list.remove(res.word)
         else:
             res.failed_count+=1
-            if 'R' in flags:
-                res.request+=1
     else:
         if buff==res.word:
             res.request-=1
@@ -162,6 +163,8 @@ def next_word():
     global now
     if len(now)==0:
         now=[st_list[k] for k in word_list]
+        global total_count
+        total_count = len(now)
         if len(now)==0:
             return 0
     return now.pop(random.randrange(0, len(now)))
@@ -177,8 +180,7 @@ if __name__=='__main__':
             break
         while True:
             if 'T' in flags or 'R' in flags:                
-                print(res.word, end=' ')
-                print('(y/n{0})? '.format('/r' if 'v' in flags else ''), end='')
+                print('{0} ({1}/{2})(y/n)? '.format(res.word, total_count - len(now), total_count), end='')
             else:
                 if 'v' in flags:
                     print('(r)? ', end='')
@@ -195,5 +197,7 @@ if __name__=='__main__':
                 if buff=='y' or buff=='n':
                     break
         judge(res, buff)
+        print(res.note)
+        time.sleep(1)
         print()
         write_statistics(".statistics")
