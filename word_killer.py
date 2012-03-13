@@ -7,7 +7,6 @@ def parse_args():
     global request
 
     flags = set()
-    request = 1
     op = False
     args = sys.argv[1:]
 
@@ -21,6 +20,7 @@ def parse_args():
     except Exception as e:
         print(e)
         exit(1)
+    request = 3 if 'T' in flags else 1
     return args
 
 def read_dict(fname):
@@ -47,28 +47,28 @@ def read_yn():
 
 def term(sublist):
     import random
-    requests = []
-    now = 0
-    colddown = [-4] * len(sublist)
+    words = []
 
     for i in range(len(sublist)):
-        requests.append([i, request])
-    while len(requests) > 0:
-        while True:
-            ran = random.randrange(0, len(requests))
-            if now - colddown[ran] > 3:
-                colddown[ran] = now
-                break
-        yes = ''
-        while yes != 'y' and yes !='n':
-            print('{0} (y/n)? '.format(sublist[requests[ran][0]][0]), end='')
-            yes = read_yn()
-        print(sublist[requests[ran][0]][1])
-        print()
-        requests[ran][1] += -1 if yes == 'y' else 1
-        if requests[ran][1] == 0:
-            requests.pop(ran)
-        now += 1
+        words.append([i, request])
+    while True:
+        now = [k for k in words if k[1] > 0]
+        if len(now) == 0:
+            break
+        random.shuffle(now)
+        i = 0
+        for k in now:
+            i += 1
+            yes = ''
+            while yes != 'y' and yes !='n':
+                print('{0} ({1}/{2})(y/n)? '.format(sublist[k[0]][0], i, len(now)), end='')
+                yes = read_yn()
+            print(sublist[k[0]][1])
+            print()
+            if yes == 'y':
+                k[1] -= 1
+            elif 'R' in flags:
+                k[1] += 1
 
 import re
 args = parse_args()
