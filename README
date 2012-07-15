@@ -1,0 +1,2 @@
+example:
+./3000.py `head -n 100 all | tail -n 200 | shuf`
