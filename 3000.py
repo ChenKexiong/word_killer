@@ -30,7 +30,7 @@ try :
 			idleTime = 0
 		else :
 			print()
-			idleTime = 10
+			idleTime = 1000
 			failedList.append(word)
 		for line in ans :
 			print(line)
@@ -41,5 +41,7 @@ try :
 			print()
 except KeyboardInterrupt :
 	print()
-for word in failedList :
-	print(word)
+if len(failedList) > 0 :
+	print("failedList :")
+	for word in failedList :
+		print(word)
