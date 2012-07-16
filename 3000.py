@@ -24,7 +24,7 @@ try :
 		print(word, "({}/{})".format(nowN, totalN), end = '')
 		sys.stdout.flush()
 		ans = wordList[word]
-		i, o, e = select.select([sys.stdin], [], [], 5)
+		i, o, e = select.select([sys.stdin], [], [], 10)
 		if i :
 			input()
 			idleTime = 0
