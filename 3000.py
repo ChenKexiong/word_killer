@@ -1,47 +1,28 @@
 #!/usr/bin/python3
 import sys
 import re
-import select
 
 wordList = dict()
-failedList = list()
 for line in open(".3000") :
 	word = re.match(r"^[a-z]([-‘’`']?[a-z])*", line)
 	if word :
+		word = word.group(0)
 		now = list()
-		wordList[word.group(0)] = now
-	if line[0:3] == '【考法' :
+		wordList[word] = now
+	if line[0] == '【' :
 		now.append(str.strip(line))
 nowN = 0
 totalN = len(sys.argv) - 1
-try :
-	for arg in sys.argv[1:] :
-		nowN += 1
-		if len(arg) == 0 :
-			continue
-		word = arg.lstrip()
-		word = re.match(r"^[a-z]([-‘’`']?[a-z])*", word).group(0)
-		print(word, "({}/{})".format(nowN, totalN), end = '')
-		sys.stdout.flush()
-		ans = wordList[word]
-		i, o, e = select.select([sys.stdin], [], [], 10)
-		if i :
-			input()
-			idleTime = 0
-		else :
-			print()
-			idleTime = 1000
-			failedList.append(word)
-		for line in ans :
-			print(line)
-		i, o, e = select.select([sys.stdin], [], [], idleTime)
-		if i :
-			input()
-		else :
-			print()
-except KeyboardInterrupt :
+for arg in sys.argv[1:] :
+	nowN += 1
+	if len(arg) == 0 :
+		continue
+	word = arg.lstrip()
+	word = re.match(r"^[a-z]([-‘’`']?[a-z])*", word).group(0)
+	ans = wordList[word]
+	print(word, "({}/{})".format(nowN, totalN), end = '')
+	sys.stdout.flush()
+	input()
+	for line in ans :
+		print(line)
 	print()
-if len(failedList) > 0 :
-	print("failedList :")
-	for word in failedList :
-		print(word)
